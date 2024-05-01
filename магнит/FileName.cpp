@@ -2,6 +2,7 @@
 #include <locale>
 #include <string>
 #include <fstream>
+#include "FileName.h"
 
 using namespace std;
 
@@ -23,7 +24,7 @@ int	products() {
 	cin >> products;
 	return products;
 }
-void Diskout(ofstream& fout, product base_product,int i) {
+void Diskout_visual_file(ofstream& fout, product base_product, int i) {
 	fout << "Продукт:";
 	fout << i + 1 << endl;
 	fout << "Название продукта:";
@@ -31,43 +32,41 @@ void Diskout(ofstream& fout, product base_product,int i) {
 	fout << "Количество видов:";
 	fout << base_product.count_vid << endl;
 }
-void Diskout1(ofstream& fout, vidi** base_vidov, int i, int j) {
-	fout << "Кодовый номер товара:" << endl;
+void Diskout1_visual_file(ofstream& fout, vidi** base_vidov, int i, int j) {
+	fout << "Кодовый номер товара";
 	fout << "(Инвентарный номер товара,Номер вида товара):";
 	fout << "N";
-	fout << i+1;
-	fout << " ";
-	fout << j+1 <<  endl;
-	fout << "Название товара:" << endl;
-	fout << base_vidov[i][j].name << "  ";
-	fout << "Срок годности товара:" << endl;
+	fout << i + 1;
+	fout << j + 1 << endl;
+	fout << "Название товара: ";
+	fout << base_vidov[i][j].name << endl;
+	fout << "Срок годности товара: ";
 	fout << base_vidov[i][j].data << endl;
 }
+void Diskout_work_file(ofstream& fout, vidi** base_vidov, int i, int j) {
+	fout << i + 1 << j + 1 << endl;
+	fout << base_vidov[i][j].name << endl;
+	fout << base_vidov[i][j].data << endl;
+}
+void Diskout1_work_file(ofstream& fout, product base_product, int i){
+	fout << i + 1 << endl;
+	fout << base_product.name << endl;
+	fout << base_product.count_vid << endl;
+}
 
-void Diskin(ifstream& fin, vidi**& base_vidov, product* base_product, int count_p) {
-	string str[1000];
+static product Diskin(ifstream& fin, product* base_product, int i){
 	int g[1000];
-	for (int i = 0; i < count_p; i++) {
-		fin >> str[0];
-		fin >> g[0];
-		fin >> str[1];
-		fin >> str[2];
-		fin >> str[3];
-		fin >> g[1];
-		int current = base_product[i].count_vid;
-		for (int j = 0; j < current; j++) {
-			fin >> str[4];
-			fin >> str[5];
-			fin >> str[6];
-			fin >> g[2];
-			fin >> str[7];
-			fin >> g[3];
-			fin >> str[8];
-			fin >> base_vidov[i][j].name;
-			fin >> str[9];
-			fin >> base_vidov[i][j].data;
-		}
-	}
+	fin >> g[i];
+	fin >> base_product[i].name;
+	fin >> base_product[i].count_vid;
+	return base_product[i];
+}
+static vidi Diskin2(ifstream& fin, vidi** base_vidov, int i, int j) {
+	int h[7000];
+	fin >> h[j];
+	fin >> base_vidov[i][j].name;
+	fin >> base_vidov[i][j].data;
+	return base_vidov[i][j];
 }
 
 void takebase(product* base_product, vidi** base_vidov, int count_p) {
@@ -96,7 +95,8 @@ int main() {
 	int count_p = products();
 	product* base_product = new product[count_p];
 	vidi** base_vidov = new vidi* [count_p];
-	ofstream base("Base.txt");	
+	ofstream base("Base.txt");
+	ofstream base_work("Bas.txt");
 	int key = -1;
 	while (key != 0) {
 		cout << "Введите новый кодовый ключ:";
@@ -126,9 +126,11 @@ int main() {
 		case 3: {
 			for (int i = 0; i < count_p; i++) {
 				int current = base_product[i].count_vid;
-				Diskout(base, base_product[i],i);
+				Diskout_visual_file(base, base_product[i],i);
+				Diskout1_work_file(base_work, base_product[i], i);
 				for (int j = 0; j < current; j++) {
-					Diskout1(base, base_vidov, i, j);
+					Diskout1_visual_file(base, base_vidov, i, j);
+					Diskout_work_file(base_work, base_vidov, i, j);
 				}
 			}
 			cout << "Значения записаны в файл" << endl;
@@ -136,17 +138,89 @@ int main() {
 			break;
 		}
 		case 4: {
-			vidi** base_vidov = new vidi * [count_p];
-			ifstream base("Base.txt");
+			/*product* base_product = new product[count_p];
+			vidi** base_vidov = new vidi * [count_p];*/
+			ifstream Bas("Bas.txt");
 			cout << "Полученные значения из файла:" << endl;
 			for (int i = 0; i < count_p; i++) {
 				base_vidov[i] = new vidi[7];
 			}
-			Diskin(base, base_vidov, base_product, count_p);
-			base.close();
+			for (int i = 0; i < count_p; i++) {
+				base_product[i] = Diskin(Bas, base_product, i);
+				int current = base_product[i].count_vid;
+				cout << base_product[i].name << endl;
+				cout << "Видов: " << base_product[i].count_vid << endl;
+				for (int j = 0; j < current; j++) {
+					base_vidov[i][j] = Diskin2(Bas, base_vidov, i, j);
+					cout << "N " << i + 1 << j + 1 << " ";
+					cout << base_vidov[i][j].name << " ";
+					cout << base_vidov[i][j].data << endl;
+						}
+				}
+			Bas.close();
 			break;
 		}
+
 		case 5: {
+			int kodenumber;
+			int key_number;
+			string change_string;
+			int change_int;
+			cout << "Введите кодовый номер элемента который хотите изменить:";
+			cin >> kodenumber;
+			int i = (kodenumber / 10) - 1;
+			int j = (kodenumber % 10) - 1;
+			cout << "Какую информацию вы хотите изменить?" << endl;
+			cout << "Введите 1 - если хотите изменить имя товара" << endl;
+			cout << "Введите 2 - если хотите изменить имя вида товара" << endl;
+			cout << "Введите 3 - если хотите изменить срок хранения" << endl;
+			cin >> key_number;
+			while (key_number != 0) {
+				switch (key_number) {
+					case 1: {
+						cout << "Введите новое имя товара:";
+						getline(cin,change_string);
+						base_product[i].name = change_string;
+						key_number = 0;
+						break;
+					}
+					case 2: {
+						cout << "Введите новое имя вида товара:";
+						getline(cin, change_string);
+						base_vidov[i][j].name = change_string;
+						key_number = 0;
+						break;
+					}
+					case 3: {
+						cout << "Введите новый срок хранения товара:";
+						cin >> change_int;
+						base_vidov[i][j].data = change_int;
+						key_number = 0;
+						break;
+					}
+					default:
+						cout << "Неправильный кодовый ключ!" << endl;
+						cout << "Введите кодовый ключ еще раз:";
+						cin >> key_number;
+						break;
+				}
+			}
+			break;
+		}
+		case 6: {
+			for (int i = 0; i < count_p; i++) {
+				int current = base_product[i].count_vid;
+				for (int j = 0; j < current; j++) {
+					cout << base_product[i].name << " " << base_vidov[i][j].name;
+					cout << " Кодовый номер " << i + 1 << j + 1 << " ";
+					cout << "Срок хранения " << base_vidov[i][j].data << endl;
+				}
+			}
+			break;
+		}
+
+
+		case 7: {
 			cout << "Удаление выполняется:" << endl;
 			for (int i = 0; i < count_p; i++) {
 				int current = base_product[i].count_vid;
@@ -154,32 +228,29 @@ int main() {
 					cout << base_product[i].name << " " << base_vidov[i][j].name;
 					cout << " Кодовый номер " << i + 1 << j + 1;
 					cout << " - удален" << endl;
+					base_vidov[i][j].data = 0;
+					base_vidov[i][j].name = "";
 				}
-				delete[] base_vidov[i];
+				//delete[] base_vidov[i]
+				base_product[i].count_vid = 0;
+				base_product[i].name = "";
 			}
-			delete[] base_vidov;
+			//delete[] base_product;
+			//delete[] base_vidov;
 			cout << "Удаление завершено" << endl;
 			break;
 		}
-		case 6: {
-			for (int i = 0; i < count_p; i++) {
-				int current = base_product[i].count_vid;
-				for (int j = 0; j < current; j++) {
-						cout << base_product[i].name << " " << base_vidov[i][j].name;
-						cout << " Кодовый номер " << i + 1 << j + 1 << endl;
-						cout << base_vidov[i][j].data;
-				}
-			}
-			break;
-		}
+
 		case 0: {
 			cout << "                                   Спасибо, что воспользовались нашей програмой." << endl;
 			cout << "                                   Хорошего вам дня!" << endl;
-			cout << "                                                        © NVLCORP ";
+			cout << "                                                         Автор программы: Уланов Максим Валерьевич ";
 			break;
 		}
 		default:
-			cout << "Неправильный кодовый ключ";
+			cout << "Неправильный кодовый ключ!";
+			cout << "Введите кодовый ключ еще раз:";
+			cin >> key;
 			break;
 		}
 	}
