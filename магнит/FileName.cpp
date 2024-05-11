@@ -2,7 +2,6 @@
 #include <locale>
 #include <string>
 #include <fstream>
-#include "FileName.h"
 
 using namespace std;
 
@@ -18,12 +17,6 @@ public:
 	int data;
 };
 
-int	products() {
-	int products;
-	cout << "Введите количество продуктов:";
-	cin >> products;
-	return products;
-}
 void Diskout_visual_file(ofstream& fout, product base_product, int i) {
 	fout << "Продукт:";
 	fout << i + 1 << endl;
@@ -55,15 +48,15 @@ void Diskout1_work_file(ofstream& fout, product base_product, int i){
 }
 
 static product Diskin(ifstream& fin, product* base_product, int i){
-	int g[1000];
-	fin >> g[i];
+	int kodenumber;
+	fin >> kodenumber;
 	fin >> base_product[i].name;
 	fin >> base_product[i].count_vid;
 	return base_product[i];
 }
 static vidi Diskin2(ifstream& fin, vidi** base_vidov, int i, int j) {
-	int h[7000];
-	fin >> h[j];
+	int kodenumber;
+	fin >> kodenumber;
 	fin >> base_vidov[i][j].name;
 	fin >> base_vidov[i][j].data;
 	return base_vidov[i][j];
@@ -92,12 +85,24 @@ void takebase(product* base_product, vidi** base_vidov, int count_p) {
 
 int main() {
 	setlocale(LC_ALL, "RU");
-	int count_p = products();
+	int products;
+	cout << "Введите количество продуктов:";
+	cin >> products;
+	int count_p = products;
 	product* base_product = new product[count_p];
 	vidi** base_vidov = new vidi* [count_p];
 	ofstream base("Base.txt");
 	ofstream base_work("Bas.txt");
 	int key = -1;
+	cout << "         Cправочная информация:" << endl;
+	cout << "Ключ - 0: Завершение программы" << endl;
+	cout << "Ключ - 1: Заполнение базы данных срока хранения товаров" << endl;
+	cout << "Ключ - 2: Вывод товаров срок хранения которых истекает в заданном году" << endl;
+	cout << "Ключ - 3: Запись значений в файл" << endl;
+	cout << "Ключ - 4: Получение значений из файла" << endl;
+	cout << "Ключ - 5: Изменение значений товара" << endl;
+	cout << "Ключ - 6: Вывод базы данных товаров" << endl;
+	cout << "Ключ - 7: Удаление записей продуктов" << endl;
 	while (key != 0) {
 		cout << "Введите новый кодовый ключ:";
 		cin >> key;
@@ -131,6 +136,7 @@ int main() {
 				for (int j = 0; j < current; j++) {
 					Diskout1_visual_file(base, base_vidov, i, j);
 					Diskout_work_file(base_work, base_vidov, i, j);
+					cout << base_product[i].name << base_vidov[i][j].name << "Срок хранения: " << base_vidov[i][j].data << " - Записан в файл";
 				}
 			}
 			cout << "Значения записаны в файл" << endl;
